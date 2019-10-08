@@ -87,7 +87,9 @@ public class PlayerJumpScript : MonoBehaviour
         if(didJump){
             didJump = false;
             if(other.tag == "Platform"){
-
+                if(GameManager.instance != null){
+                    GameManager.instance.CreateNewPlatformAndLerp(other.transform.position.x);
+                }
             }
         }
     }
