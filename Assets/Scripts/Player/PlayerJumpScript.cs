@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerJumpScript : MonoBehaviour
 {
@@ -13,11 +14,18 @@ public class PlayerJumpScript : MonoBehaviour
     private float thresholdX = 7f;
     private float thresholdY = 14f;
     private bool setPower, didJump;
+    private Slider powerBar;
+    private float powerbarThreshold = 10f;
+    private float powerBarValue =  0f;
 
     private void Awake() {
         MakeInstance();
         rbody = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        powerBar = GameObject.Find("Power Bar").GetComponent<Slider>();
+        powerBar.minValue = 0f;
+        powerBar.maxValue = 10f;
+        powerBar.value = powerBarValue;
     }
 
     private void Update() {
@@ -50,6 +58,8 @@ public class PlayerJumpScript : MonoBehaviour
             if(forceY > 13.5f){
                 forceY = 13.5f;
             }
+            powerBarValue += powerbarThreshold * Time.deltaTime;
+            powerBar.value = powerBarValue;
         }
     }
 
@@ -75,6 +85,9 @@ public class PlayerJumpScript : MonoBehaviour
         rbody.velocity = new Vector2(forceX, forceY);
         forceX = forceY = 0;
         didJump = true;
+        anim.SetBool("Jump", didJump); 
+        powerBarValue = 0f;
+        powerBar.value = powerBarValue;
     }
 
     /** 
@@ -86,11 +99,22 @@ public class PlayerJumpScript : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other) {
         if(didJump){
             didJump = false;
+            anim.SetBool("Jump", didJump); 
             if(other.tag == "Platform"){
                 if(GameManager.instance != null){
                     GameManager.instance.CreateNewPlatformAndLerp(other.transform.position.x);
                 }
+                if(ScoreManager.instance != null){
+                    ScoreManager.instance.IncrementScore();
+                }
             }
+        }
+
+        if(other.tag == "Dead"){
+            if(GameOverManager.instance != null){
+                GameOverManager.instance.GameOverShowPanel();
+            }
+            Destroy(gameObject);
         }
     }
 }
